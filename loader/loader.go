@@ -3,17 +3,29 @@ package loader
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-
 	"github.com/joho/godotenv"
 	log "github.com/pi-prakhar/utils/logger"
+	"os"
 )
 
 var Logger = log.New(log.DEBUG, "Utils")
 
+func GetValueFromEnv(key string) (string, error) {
+	if key == "" {
+		Logger.Debug("Error : Key cannot be empty")
+		return "", fmt.Errorf("key cannot be empty")
+	}
+	if _, ok := os.LookupEnv(key); ok {
+		value := os.Getenv(key)
+		return value, nil
+	}
+	Logger.Debug(fmt.Sprintf("Error : Key '%s' not found in .env file", key))
+	return "", fmt.Errorf("key '%s' not found in .env file", key)
+}
+
 // LoadEnv loads environment variables from a .env file
 func LoadEnv() error {
-	err := CheckEnvFile()
+	err := checkEnvFile()
 	if err != nil {
 		Logger.Debug("Error: env file not found")
 		return err
@@ -27,7 +39,7 @@ func LoadEnv() error {
 }
 
 // CheckEnvFile checks if a .env file is present in the current directory
-func CheckEnvFile() error {
+func checkEnvFile() error {
 	if _, err := os.Stat(".env"); os.IsNotExist(err) {
 		Logger.Debug("Error: env file not found")
 		return err
@@ -69,7 +81,7 @@ func GetValueFromConf(key string) (string, error) {
 
 	value, found := config[key]
 	if !found {
-		Logger.Debug(fmt.Sprintf("Key '%s' not found in config file", key))
+		Logger.Debug(fmt.Sprintf("Error : Key '%s' not found in config file", key))
 		return "", fmt.Errorf("key '%s' not found in config file", key)
 	}
 

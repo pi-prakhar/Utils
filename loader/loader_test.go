@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	// Assuming use of testify for assertions
 )
 
 func TestCheckEnvFile(t *testing.T) {
@@ -15,7 +14,7 @@ func TestCheckEnvFile(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	assert.NoError(t, CheckEnvFile()) // Expect no error
+	assert.NoError(t, checkEnvFile()) // Expect no error
 
 	// Test case 2: .env file does not exist
 	err = file.Close()
@@ -26,7 +25,7 @@ func TestCheckEnvFile(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = CheckEnvFile()
+	err = checkEnvFile()
 	assert.Error(t, err, "Expected error when .env file is missing")
 }
 
@@ -52,4 +51,58 @@ func TestLoadEnv(t *testing.T) {
 	}
 
 	assert.Error(t, LoadEnv())
+}
+
+func TestGetValueFromEnv_ExistingKey(t *testing.T) {
+	key := "TEST_KEY"
+	value := "test_value"
+	os.Setenv(key, value)
+
+	result, err := GetValueFromEnv(key)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	if result != value {
+		t.Errorf("Expected value %s, got %s", value, result)
+	}
+
+	os.Unsetenv(key)
+}
+
+func TestGetValueFromEnv_NonExistentKey(t *testing.T) {
+	key := "NON_EXISTENT_KEY"
+
+	result, err := GetValueFromEnv(key)
+
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+
+	if err.Error() != fmt.Sprintf("key '%s' not found in .env file", key) {
+		t.Errorf("Expected error message: %s, got: %s", fmt.Sprintf("key '%s' not found in .env file", key), err.Error())
+	}
+
+	if result != "" {
+		t.Errorf("Expected empty string, got: %s", result)
+	}
+}
+
+func TestGetValueFromEnv_EmptyKey(t *testing.T) {
+	key := ""
+
+	result, err := GetValueFromEnv(key)
+
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+
+	if err.Error() != "key cannot be empty" {
+		t.Errorf("Expected error message: %s, got: %s", "key cannot be empty", err.Error())
+	}
+
+	if result != "" {
+		t.Errorf("Expected empty string, got: %s", result)
+	}
 }
